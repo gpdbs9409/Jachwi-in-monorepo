@@ -1,11 +1,17 @@
 package com.capstone.auth.domain.dto;
 
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Getter
 @NoArgsConstructor
 public class EmailAuthDto {
     private String email;
     private String ePw;
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getePw() {
+        return ePw;
+    }
 }
