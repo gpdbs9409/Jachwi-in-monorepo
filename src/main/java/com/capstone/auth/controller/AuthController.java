@@ -3,6 +3,7 @@ package com.capstone.auth.controller;
 import com.capstone.auth.domain.dto.EmailAuthDto;
 import com.capstone.auth.domain.dto.LoginDto;
 import com.capstone.auth.domain.dto.TokenDto;
+import com.capstone.auth.domain.dto.UserInfoDto;
 import com.capstone.auth.domain.dto.UserJoinDto;
 import com.capstone.auth.service.UserService;
 import com.capstone.auth.service.impl.EmailServiceImpl;
@@ -46,5 +47,11 @@ public class AuthController {
             return ResponseEntity.ok("인증 완료");
         }
         return ResponseEntity.badRequest().body("인증 실패");
+    }
+
+    // 서버 내부 전용 — Main Server가 JWT에서 꺼낸 email로 사용자 정보 조회
+    @GetMapping("/internal/users/{email}")
+    public ResponseEntity<UserInfoDto> getUserInfo(@PathVariable String email) {
+        return ResponseEntity.ok(userService.getUserByEmail(email));
     }
 }

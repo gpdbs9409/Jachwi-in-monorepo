@@ -3,6 +3,7 @@ package com.capstone.auth.service;
 import com.capstone.auth.config.JwtUtil;
 import com.capstone.auth.domain.User;
 import com.capstone.auth.domain.dto.TokenDto;
+import com.capstone.auth.domain.dto.UserInfoDto;
 import com.capstone.auth.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,6 +18,12 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+
+    public UserInfoDto getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+        return new UserInfoDto(user);
+    }
 
     public String checkEmailDuplicate(String email) {
         userRepository.findByEmail(email).ifPresent(u -> {
