@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(grep -r \"claude\\\\|anthropic\\\\|CLAUDE_API\" /Users/kimhyeyoon/Jachwi-in/Jachwi_in-Server-Spring/src --include=\"*.java\" --include=\"*.properties\" --include=\"*.yml\" -l 2>/dev/null)",
-      "Read(//Users/kimhyeyoon/Jachwi-in/Jachwi_in-Server-Spring/src/**)"
-    ]
-  }
-}
