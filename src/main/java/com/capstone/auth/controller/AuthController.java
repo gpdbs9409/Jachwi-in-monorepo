@@ -49,6 +49,21 @@ public class AuthController {
         return ResponseEntity.badRequest().body("인증 실패");
     }
 
+    // RefreshToken으로 새 AccessToken 발급
+    @PostMapping("/refresh")
+    public ResponseEntity<String> refresh(@RequestHeader("Authorization") String bearerToken) {
+        String refreshToken = bearerToken.replace("Bearer ", "");
+        return ResponseEntity.ok(userService.refresh(refreshToken));
+    }
+
+    // 로그아웃 — Redis에서 RefreshToken 삭제
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(@RequestHeader("Authorization") String bearerToken) {
+        String refreshToken = bearerToken.replace("Bearer ", "");
+        userService.logout(refreshToken);
+        return ResponseEntity.ok("로그아웃 완료");
+    }
+
     // 서버 내부 전용 — Main Server가 JWT에서 꺼낸 email로 사용자 정보 조회
     @GetMapping("/internal/users/{email}")
     public ResponseEntity<UserInfoDto> getUserInfo(@PathVariable String email) {

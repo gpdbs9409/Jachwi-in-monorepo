@@ -29,4 +29,16 @@ public class RedisUtil {
         ValueOperations<String, String> ops = template.opsForValue();
         ops.set(email, code, Duration.ofMinutes(5));
     }
+
+    public void saveRefreshToken(String email, String token) {
+        template.opsForValue().set("RT:" + email, token, Duration.ofDays(7));
+    }
+
+    public String getRefreshToken(String email) {
+        return template.opsForValue().get("RT:" + email);
+    }
+
+    public void deleteRefreshToken(String email) {
+        template.delete("RT:" + email);
+    }
 }

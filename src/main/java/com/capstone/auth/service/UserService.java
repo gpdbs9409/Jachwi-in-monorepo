@@ -18,6 +18,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final RedisUtil redisUtil;
 
     public UserInfoDto getUserByEmail(String email) {
         User user = userRepository.findByEmail(email)
@@ -51,9 +52,33 @@ public class UserService {
             throw new IllegalArgumentException("비밀번호가 틀렸습니다.");
         }
 
+        String accessToken = jwtUtil.generateAccessToken(email);
+        String refreshToken = jwtUtil.generateRefreshToken(email);
+        redisUtil.saveRefreshToken(email, refreshToken);
+
         return TokenDto.builder()
-                .accessToken(jwtUtil.generateAccessToken(email))
-                .refreshToken(jwtUtil.generateRefreshToken(email))
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .build();
+    }
+
+    public String refresh(String refreshToken) {
+        if (!jwtUtil.validateToken(refreshToken)) {
+            throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
+        }
+        String email = jwtUtil.getEmail(refreshToken);
+        String saved = redisUtil.getRefreshToken(email);
+        if (!refreshToken.equals(saved)) {
+            throw new IllegalArgumentException("토큰이 일치하지 않습니다.");
+        }
+        return jwtUtil.generateAccessToken(email);
+    }
+
+    public void logout(String refreshToken) {
+        if (!jwtUtil.validateToken(refreshToken)) {
+            throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
+        }
+        String email = jwtUtil.getEmail(refreshToken);
+        redisUtil.deleteRefreshToken(email);
     }
 }
