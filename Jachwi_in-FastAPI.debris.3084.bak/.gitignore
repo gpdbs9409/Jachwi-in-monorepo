@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# 환경변수 (절대 커밋 금지)
+.env
+
+# Sentence Transformers 모델 캐시
+.cache/
+models/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
