@@ -27,20 +27,17 @@ BATCH_SIZE = 500  # 한 번에 처리할 건물 수
 
 def fetch_buildings(engine, offset: int, limit: int) -> list[dict]:
     query = text("""
-        SELECT x, y, 시도명, 시군구, 법정읍면동명, 도로명,
+        SELECT id, x, y, 시도명, 시군구, 법정읍면동명, 도로명,
                건물본번, 건물부번, 편의점, 카페, 버스정류장,
                가로등, CCTV, 병원, 식당, 학교_거리
         FROM building
+        WHERE x IS NOT NULL AND y IS NOT NULL
+        ORDER BY id
         LIMIT :limit OFFSET :offset
     """)
     with engine.connect() as conn:
         rows = conn.execute(query, {"limit": limit, "offset": offset}).mappings().all()
     return [dict(r) for r in rows]
-
-
-def build_point_id(x: float, y: float, index: int) -> int:
-    """Qdrant는 정수 ID 필요 → 순번 사용"""
-    return index
 
 
 def run():
@@ -63,10 +60,11 @@ def run():
         # 배치 임베딩
         vectors = embed_batch(texts)
 
-        # Qdrant 저장
+        # Qdrant 저장 — point id는 MySQL의 실제 building.id 사용
+        # (재실행/증분 반영 시에도 안정적으로 같은 건물을 덮어쓰기 위함)
         points = [
             {
-                "id": offset + i,
+                "id": buildings[i]["id"],
                 "vector": vectors[i],
                 "payload": buildings[i],
             }
