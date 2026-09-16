@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# 모델 캐시
+.cache/
+
+# 결과 (선택적으로 트래킹)
+results/*.json
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
