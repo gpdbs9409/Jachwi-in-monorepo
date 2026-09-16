@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>자취인 아키텍처</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+    min-height: 100vh;
+  }
+  .canvas {
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+    width: 960px;
+  }
+  h1 { font-size: 26px; font-weight: 700; color: #1a1a2e; margin-bottom: 4px; }
+  .subtitle { color: #888; font-size: 13px; margin-bottom: 32px; }
+
+  /* ── 레이아웃 ── */
+  .top-row { display: flex; justify-content: center; margin-bottom: 0; }
+  .mid-row { display: flex; align-items: stretch; gap: 16px; margin-top: 0; }
+
+  /* Flutter card */
+  .flutter-card {
+    background: #e3f2fd; border: 2px solid #64b5f6; border-radius: 12px;
+    padding: 14px 32px; display: flex; align-items: center; gap: 12px;
+  }
+  .flutter-card .name { font-size: 15px; font-weight: 700; color: #1a1a2e; }
+  .flutter-card .desc { font-size: 11px; color: #666; }
+
+  /* EC2 box */
+  .ec2-box {
+    border: 2.5px solid #FF9900; border-radius: 14px;
+    padding: 22px 18px 20px; position: relative; flex: 1;
+  }
+  .ec2-label {
+    position: absolute; top: -13px; left: 16px;
+    background: white; padding: 0 8px;
+    font-size: 12px; font-weight: 600; color: #FF9900;
+    display: flex; align-items: center; gap: 5px;
+  }
+
+  /* Docker box */
+  .docker-box {
+    border: 2px dashed #2496ED; border-radius: 10px;
+    padding: 18px 14px 16px; position: relative;
+  }
+  .docker-label {
+    position: absolute; top: -12px; left: 12px;
+    background: white; padding: 0 8px;
+    font-size: 12px; font-weight: 600; color: #2496ED;
+    display: flex; align-items: center; gap: 5px;
+  }
+
+  /* Service grid inside docker */
+  .svc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-top: 6px;
+  }
+  .db-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  /* Cards */
+  .card {
+    border-radius: 10px; padding: 11px 8px;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 5px; border: 1.5px solid transparent; text-align: center;
+    position: relative;
+  }
+  .card svg, .card img { width: 34px; height: 34px; }
+  .card .name { font-size: 11px; font-weight: 700; color: #1a1a2e; }
+  .card .desc { font-size: 9.5px; color: #777; line-height: 1.45; }
+  .card .port { font-size: 10px; font-weight: 600; color: #555; background: rgba(0,0,0,0.07); border-radius: 4px; padding: 1px 6px; margin-top: 2px; }
+
+  .card.auth    { background: #ebf4ff; border-color: #90cdf4; }
+  .card.main    { background: #edfbf0; border-color: #86efac; }
+  .card.fastapi { background: #f0faf9; border-color: #5eead4; }
+  .card.mysql   { background: #fffbeb; border-color: #fcd34d; }
+  .card.redis   { background: #fff1f1; border-color: #fca5a5; }
+  .card.qdrant  { background: #f5f0ff; border-color: #c4b5fd; }
+
+  /* Interaction arrows section */
+  .interactions {
+    margin-top: 28px;
+  }
+  .interactions h3 { font-size: 13px; font-weight: 700; color: #555; margin-bottom: 12px; }
+  .flow-list { display: flex; flex-direction: column; gap: 8px; }
+  .flow-item {
+    display: flex; align-items: center; gap: 8px;
+    background: #fafafa; border-radius: 8px; padding: 8px 12px;
+    font-size: 12px;
+  }
+  .flow-arrow { font-size: 14px; color: #999; flex-shrink: 0; }
+  .flow-badge {
+    font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .badge-flutter { background: #e3f2fd; color: #1565c0; }
+  .badge-auth    { background: #ebf4ff; color: #1a56db; }
+  .badge-main    { background: #edfbf0; color: #166534; }
+  .badge-fastapi { background: #f0faf9; color: #065f46; }
+  .badge-redis   { background: #fff1f1; color: #991b1b; }
+  .badge-mysql   { background: #fffbeb; color: #92400e; }
+  .badge-qdrant  { background: #f5f0ff; color: #5b21b6; }
+  .badge-claude  { background: #fdf4e8; color: #92400e; }
+  .badge-gmail   { background: #fde8e8; color: #991b1b; }
+  .flow-desc { color: #555; }
+  .flow-method { font-size: 10px; color: #999; font-family: monospace; }
+
+  /* External col */
+  .ext-col {
+    display: flex; flex-direction: column; gap: 10px;
+    min-width: 120px; padding-top: 8px;
+  }
+  .ext-card {
+    border-radius: 10px; padding: 12px 10px;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 5px; border: 1.5px solid transparent; text-align: center;
+  }
+  .ext-card svg { width: 32px; height: 32px; }
+  .ext-card .name { font-size: 11px; font-weight: 700; color: #1a1a2e; }
+  .ext-card .desc { font-size: 9.5px; color: #777; }
+  .ext-card.claude { background: #fdf4e8; border-color: #f6ad55; }
+  .ext-card.gmail  { background: #fde8e8; border-color: #fca5a5; }
+
+  /* Arrow connector area */
+  .arrow-connector {
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    min-width: 32px; gap: 2px; color: #bbb; font-size: 10px;
+  }
+
+  /* Central vertical arrow between flutter and ec2 */
+  .v-arrow { display: flex; justify-content: center; padding: 6px 0; color: #bbb; font-size: 20px; }
+</style>
+</head>
+<body>
+<div class="canvas">
+  <h1>자취인 아키텍처</h1>
+  <div class="subtitle">자취생을 위한 AI 기반 지도 + 커뮤니티 플랫폼 · MSA · AWS EC2 Docker Compose</div>
+
+  <!-- Flutter -->
+  <div class="top-row">
+    <div class="flutter-card">
+      <svg width="38" height="38" viewBox="0 0 48 48">
+        <polygon points="24,4 44,24 36,24 24,12" fill="#54C5F8"/>
+        <polygon points="24,12 36,24 24,36 16,28" fill="#01579B"/>
+        <polygon points="16,28 24,36 16,44 8,36" fill="#29B6F6"/>
+      </svg>
+      <div>
+        <div class="name">Flutter 앱</div>
+        <div class="desc">iOS · Android · Web (Chrome)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="v-arrow">↓ HTTPS</div>
+
+  <!-- EC2 + External side by side -->
+  <div class="mid-row">
+
+    <!-- EC2 -->
+    <div class="ec2-box">
+      <div class="ec2-label">
+        <svg width="13" height="13" viewBox="0 0 32 32" fill="#FF9900"><path d="M16 2 L30 16 L16 30 L2 16 Z"/></svg>
+        AWS EC2 · ap-northeast-2 (Seoul) · t3.medium
+      </div>
+
+      <!-- Docker Compose -->
+      <div class="docker-box">
+        <div class="docker-label">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="#2496ED"><rect x="1" y="10" width="4" height="3" rx="0.5"/><rect x="6" y="10" width="4" height="3" rx="0.5"/><rect x="11" y="10" width="4" height="3" rx="0.5"/><rect x="6" y="6" width="4" height="3" rx="0.5"/><rect x="11" y="6" width="4" height="3" rx="0.5"/><rect x="11" y="2" width="4" height="3" rx="0.5"/><path d="M22 11.5c-.5-1.5-2-2-3.5-1.5-.3-2-2-3-3.5-2.5" stroke="#2496ED" stroke-width="1.2" fill="none"/></svg>
+          Docker Compose
+        </div>
+
+        <!-- Services row -->
+        <div class="svc-grid">
+          <!-- Auth -->
+          <div class="card auth">
+            <svg viewBox="0 0 48 48" fill="none">
+              <rect width="48" height="48" rx="8" fill="#6DB33F"/>
+              <path d="M24 10 C16 10 11 16 11 22 L11 26 C11 28 13 30 15 30 L33 30 C35 30 37 28 37 26 L37 22 C37 16 32 10 24 10Z" fill="white" opacity="0.9"/>
+              <rect x="18" y="28" width="12" height="10" rx="3" fill="white" opacity="0.9"/>
+              <circle cx="24" cy="22" r="5" fill="#6DB33F"/>
+            </svg>
+            <div class="name">Auth 서비스</div>
+            <div class="desc">회원가입 · 로그인<br>JWT 발급</div>
+            <div class="port">:8081</div>
+          </div>
+          <!-- Main -->
+          <div class="card main">
+            <svg viewBox="0 0 48 48" fill="none">
+              <rect width="48" height="48" rx="8" fill="#6DB33F"/>
+              <path d="M24 8 L36 14 L36 34 L24 40 L12 34 L12 14 Z" fill="white" opacity="0.85"/>
+              <circle cx="24" cy="24" r="6" fill="#6DB33F"/>
+              <text x="24" y="28" text-anchor="middle" fill="white" font-size="9" font-weight="bold">M</text>
+            </svg>
+            <div class="name">Main 서비스</div>
+            <div class="desc">커뮤니티 · 지도<br>LLM 추천</div>
+            <div class="port">:8080</div>
+          </div>
+          <!-- FastAPI -->
+          <div class="card fastapi">
+            <svg viewBox="0 0 48 48" fill="none">
+              <rect width="48" height="48" rx="8" fill="#009688"/>
+              <circle cx="24" cy="24" r="12" fill="white" opacity="0.2"/>
+              <text x="24" y="29" text-anchor="middle" fill="white" font-size="16" font-weight="bold">⚡</text>
+            </svg>
+            <div class="name">Embedding</div>
+            <div class="desc">벡터 임베딩<br>유사도 검색</div>
+            <div class="port">:8000</div>
+          </div>
+        </div>
+
+        <!-- DB row -->
+        <div class="db-grid">
+          <!-- MySQL -->
+          <div class="card mysql">
+            <svg viewBox="0 0 48 48" fill="none">
+              <rect width="48" height="48" rx="8" fill="#4479A1"/>
+              <ellipse cx="24" cy="15" rx="13" ry="6" fill="white" opacity="0.85"/>
+              <rect x="11" y="15" width="26" height="18" fill="white" opacity="0.25"/>
+              <path d="M11 20 Q24 25 37 20" stroke="white" stroke-width="1.5" fill="none" opacity="0.7"/>
+              <path d="M11 26 Q24 31 37 26" stroke="white" stroke-width="1.5" fill="none" opacity="0.7"/>
+              <ellipse cx="24" cy="33" rx="13" ry="5" fill="white" opacity="0.6"/>
+            </svg>
+            <div class="name">MySQL</div>
+            <div class="desc">users · buildings<br>posts · comments</div>
+            <div class="port">:3306</div>
+          </div>
+          <!-- Redis -->
+          <div class="card redis">
+            <svg viewBox="0 0 48 48" fill="none">
+              <rect width="48" height="48" rx="8" fill="#DC382D"/>
+              <ellipse cx="24" cy="18" rx="13" ry="5" fill="white" opacity="0.85"/>
+              <ellipse cx="24" cy="24" rx="13" ry="5" fill="white" opacity="0.55"/>
+              <ellipse cx="24" cy="30" rx="13" ry="5" fill="white" opacity="0.35"/>
+            </svg>
+            <div class="name">Redis</div>
+            <div class="desc">LLM 캐시 (1h)<br>이메일 인증 (5m)</div>
+            <div class="port">:6379</div>
+          </div>
+          <!-- Qdrant -->
+          <div class="card qdrant">
+            <svg viewBox="0 0 48 48" fill="none">
+              <rect width="48" height="48" rx="8" fill="#DC244C"/>
+              <polygon points="24,10 37,17 37,31 24,38 11,31 11,17" fill="white" opacity="0.2"/>
+              <polygon points="24,10 37,17 37,31 24,38 11,31 11,17" stroke="white" stroke-width="2" fill="none"/>
+              <circle cx="24" cy="24" r="5" fill="white" opacity="0.85"/>
+            </svg>
+            <div class="name">Qdrant</div>
+            <div class="desc">벡터 DB<br>유사도 검색</div>
+            <div class="port">:6333</div>
+          </div>
+        </div>
+      </div><!-- /docker-box -->
+    </div><!-- /ec2-box -->
+
+    <!-- Arrow between EC2 and External -->
+    <div class="arrow-connector">
+      <div style="font-size:18px">→</div>
+      <div>API</div>
+    </div>
+
+    <!-- External services -->
+    <div class="ext-col">
+      <div class="ext-card claude">
+        <svg viewBox="0 0 48 48" fill="none">
+          <rect width="48" height="48" rx="10" fill="#D97B4F"/>
+          <path d="M14 36 L20 18 L24 28 L28 18 L34 36" stroke="white" stroke-width="3" stroke-linejoin="round" fill="none"/>
+          <path d="M17 30 L31 30" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+        <div class="name">Claude API</div>
+        <div class="desc">LLM 추천<br>게시글 분류</div>
+      </div>
+      <div class="ext-card gmail">
+        <svg viewBox="0 0 48 48" fill="none">
+          <rect width="48" height="48" rx="10" fill="#EA4335"/>
+          <rect x="8" y="14" width="32" height="22" rx="3" fill="white" opacity="0.9"/>
+          <path d="M8 14 L24 26 L40 14" stroke="#EA4335" stroke-width="2.5" fill="none"/>
+        </svg>
+        <div class="name">Gmail SMTP</div>
+        <div class="desc">이메일 인증<br>코드 발송</div>
+      </div>
+    </div>
+
+  </div><!-- /mid-row -->
+
+  <!-- ── 상호작용 흐름 ── -->
+  <div class="interactions">
+    <h3>⟶ 구성 요소 간 상호작용</h3>
+    <div class="flow-list">
+
+      <div class="flow-item">
+        <span class="flow-badge badge-flutter">Flutter</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-badge badge-auth">Auth :8081</span>
+        <span class="flow-desc flow-method">POST /auth/login &nbsp;·&nbsp; POST /auth/join &nbsp;·&nbsp; GET /auth/join/mailConfirm/{email}</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-badge badge-gmail">Gmail SMTP</span>
+        <span class="flow-desc">인증코드 발송</span>
+      </div>
+
+      <div class="flow-item">
+        <span class="flow-badge badge-flutter">Flutter</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-badge badge-main">Main :8080</span>
+        <span class="flow-desc flow-method">GET /api/v1/map/view/position &nbsp;·&nbsp; GET /api/v1/posts/** &nbsp;·&nbsp; POST /api/v1/llm/**</span>
+        <span class="flow-desc">(JWT 필요)</span>
+      </div>
+
+      <div class="flow-item">
+        <span class="flow-badge badge-main">Main :8080</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-badge badge-auth">Auth :8081</span>
+        <span class="flow-desc flow-method">GET /auth/internal/users/{email}</span>
+        <span class="flow-desc">사용자 정보 조회 (내부 API)</span>
+      </div>
+
+      <div class="flow-item">
+        <span class="flow-badge badge-main">Main :8080</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-badge badge-redis">Redis :6379</span>
+        <span class="flow-desc">LLM 추천 결과 캐시 (TTL 1h) · 이메일 인증코드 저장 (TTL 5m)</span>
+      </div>
+
+      <div class="flow-item">
+        <span class="flow-badge badge-main">Main :8080</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-badge badge-fastapi">Embedding :8000</span>
+        <span class="flow-desc flow-method">POST /search {query, top_k}</span>
+        <span class="flow-desc">벡터 유사도 검색 · 장애 시 DB 좌표범위 폴백</span>
+      </div>
+
+      <div class="flow-item">
+        <span class="flow-badge badge-fastapi">Embedding :8000</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-badge badge-qdrant">Qdrant :6333</span>
+        <span class="flow-desc">건물 벡터 검색 · sentence-transformers 임베딩</span>
+      </div>
+
+      <div class="flow-item">
+        <span class="flow-badge badge-main">Main :8080</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-badge badge-claude">Claude API</span>
+        <span class="flow-desc flow-method">POST /v1/messages</span>
+        <span class="flow-desc">자취방 추천 생성 · 게시글 카테고리 분류</span>
+      </div>
+
+      <div class="flow-item">
+        <span class="flow-badge badge-main">Main :8080</span>
+        <span class="flow-arrow">→</span>
+        <span class="flow-badge badge-mysql">MySQL :3306</span>
+        <span class="flow-desc">건물 · 게시글 · 댓글 · 북마크 CRUD</span>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
