@@ -6,11 +6,11 @@
 
 -- 1. 사용자 (5명)
 INSERT INTO users (email, password, name, nickname, school) VALUES
-  ('kim@test.com',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '김지훈', '자취왕김지훈', '한양대학교'),
-  ('lee@test.com',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '이수연', '수연이네', '서강대학교'),
-  ('park@test.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '박민준', '민준짱', '연세대학교'),
-  ('choi@test.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '최예린', '예린별', '이화여자대학교'),
-  ('jung@test.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '정현우', '현우고수', '홍익대학교');
+  ('kim@test.com',  '$2a$10$DH4RHws1MmhpNZKC0cNLMeF47.5ocRrgBN5aCU6y7xLvjKuRJ8oqe', '김지훈', '자취왕김지훈', '한양대학교'),
+  ('lee@test.com',  '$2a$10$DH4RHws1MmhpNZKC0cNLMeF47.5ocRrgBN5aCU6y7xLvjKuRJ8oqe', '이수연', '수연이네', '서강대학교'),
+  ('park@test.com', '$2a$10$DH4RHws1MmhpNZKC0cNLMeF47.5ocRrgBN5aCU6y7xLvjKuRJ8oqe', '박민준', '민준짱', '연세대학교'),
+  ('choi@test.com', '$2a$10$DH4RHws1MmhpNZKC0cNLMeF47.5ocRrgBN5aCU6y7xLvjKuRJ8oqe', '최예린', '예린별', '이화여자대학교'),
+  ('jung@test.com', '$2a$10$DH4RHws1MmhpNZKC0cNLMeF47.5ocRrgBN5aCU6y7xLvjKuRJ8oqe', '정현우', '현우고수', '홍익대학교');
 
 
 -- 2. 건물 (서울 주요 대학가 샘플 — 실제 좌표 기반)

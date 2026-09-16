@@ -3,6 +3,10 @@
 -- MySQL 8.0+
 -- ============================================================
 
+-- docker-entrypoint-initdb.d가 이 스크립트를 실행하는 mysql 클라이언트의 기본 커넥션 문자셋이
+-- utf8mb4가 아니어서(latin1 등) 한글 컬럼명이 깨져 syntax error가 나는 걸 방지하기 위한 설정
+SET NAMES utf8mb4;
+
 -- 1. users (Auth Server가 owns, Main Server는 user_id만 참조)
 CREATE TABLE IF NOT EXISTS users (
     id          BIGINT          NOT NULL AUTO_INCREMENT,

@@ -11,7 +11,6 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/map")
-@CrossOrigin(origins = "http://localhost:62328")
 public class MapController {
 
     private final MapService mapService;
@@ -23,7 +22,6 @@ public class MapController {
             @RequestParam double minY,
             @RequestParam double maxY){
         List<Building> buildings = mapService.getBuildingsInArea(minX, maxX, minY, maxY);
-        System.out.println(buildings.get(1));
         return ResponseEntity.ok(buildings);
     }
 }

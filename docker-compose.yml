@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3'
 
 services:
   mysql:
@@ -8,7 +8,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
       MYSQL_DATABASE: jachwiin_db
     ports:
-      - "3306:3306"
+      - "3307:3306"  # 호스트 3306이 이미 사용 중이라 3307로 매핑 (컨테이너 간 통신은 mysql:3306 그대로)
     volumes:
       - mysql-data:/var/lib/mysql
       - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql
