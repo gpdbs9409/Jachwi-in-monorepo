@@ -50,17 +50,24 @@ React (Vite, :5173)
 
 ---
 
-## DB 구조 (MySQL `jachwi`)
+## DB 구조 (MySQL `jachwiin_db`)
 
 ```sql
 users       -- Auth Server owns (write), Main Server reads via API
-building    -- 건물/시설 데이터. id(surrogate PK) + UNIQUE(x,y)
+building    -- 건물/시설 데이터. id + UNIQUE(x,y) + generated location POINT SRID 4326 + SPATIAL INDEX
+room_listing -- 실제 매물; trade_type=SALE/JEONSE/MONTHLY_RENT
+building_trade -- 통합 실거래 이력 (기존 apt_trade 원천 테이블 유지)
+-- cafe/convenience_store/hospital/restaurant/cctv/streetlight/school/subway_station/bus_stop: POI
 posts       -- 커뮤니티 게시글. category ENUM: QUESTION|REVIEW|TIP|INFO|ROOMMATE|ETC
 comments    -- 댓글 + 대댓글 (parent_id 자기참조)
 bookmarks   -- 관심 건물 (user_id + building_id 복합 유니크)
 ```
 
 - 스키마 DDL: `Jachwi_in-Server-Spring/src/main/resources/schema.sql`
+- 공간 설계/마이그레이션: `docs/spatial.md`; ERD: `docs/erd.md`
+- building_type과 건물 가격 요약 필드 추가; 기존 가격은 NULL, 유형은 ETC.
+- location은 x/y에서 DB가 계산하므로 직접 쓰지 않음. 기존 DB는 수동 마이그레이션 필요.
+- 추천 API는 아직 건물 중심. 매물 기반 추천/가격 요약/POI 집계 자동화는 미구현.
 - 더미 데이터: `Jachwi_in-Server-Spring/src/main/resources/dummy_data.sql`
 
 ---
@@ -87,7 +94,7 @@ bookmarks   -- 관심 건물 (user_id + building_id 복합 유니크)
 |------|------|------|
 | `JWT_SECRET` | Auth + Main | 동일한 값이어야 함 (최소 32자) |
 | `CLAUDE_API_KEY` | Main | Anthropic API 키 |
-| Gmail SMTP 계정 | Auth | application.properties에서 설정 |
+| `MAIL_USERNAME` / `MAIL_PASSWORD` | Auth | 환경변수로 설정 |
 
 ---
 
@@ -158,9 +165,9 @@ React 웹 앱을 포함해 모든 레포가 `main` 단일 브랜치 사용 중.
       **단, Qdrant는 여전히 비어있을 수 있음 — 위 ingest 명령을 한 번 실행해야 벡터검색이 실제로 동작함.**
       실행 전까지는 항상 DB 폴백(휴리스틱 점수 정렬)으로 동작 (동작 자체는 정상, 품질만 낮음)
 - [ ] k8s yaml 파일들이 Kafka 기준으로 되어있음 (업데이트 필요 또는 삭제)
-- [ ] `Jachwi_in-Auth-Server/src/main/resources/application-local.properties`에
-      실제 Gmail 앱 비밀번호가 평문으로 들어있음 — 배포 전에 반드시 환경변수로 옮기고
-      git 히스토리에서도 제거할 것
+- [x] 현재 Auth SMTP 설정은 MAIL_USERNAME/MAIL_PASSWORD 환경변수 참조; 로컬 비밀 설정 Git 제외.
+- [ ] 과거 노출된 Gmail 앱 비밀번호는 계정 소유자가 폐기/재발급해야 함.
+      현재 파일 수정만으로 과거 비밀이 무효화되지 않음. Git 이력 재작성은 별도 협의 작업.
 
 ---
 

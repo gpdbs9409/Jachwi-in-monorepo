@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "building", indexes = {
-        @Index(name = "idx_building_xy", columnList = "x, y")
+        @Index(name = "uk_building_xy", columnList = "x, y", unique = true)
 })
 public class Building {
 
@@ -24,6 +24,27 @@ public class Building {
     @Column(nullable = false)
     private Double y;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "building_type", nullable = false, columnDefinition = "varchar(30)")
+    private BuildingType buildingType = BuildingType.ETC;
+
+    @Column(name = "sale_price")
+    private Long salePrice;
+    @Column(name = "jeonse_price")
+    private Long jeonsePrice;
+    @Column(name = "monthly_rent_deposit")
+    private Long monthlyRentDeposit;
+    @Column(name = "monthly_rent")
+    private Long monthlyRent;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "representative_price_type", columnDefinition = "varchar(20)")
+    private TradeType representativePriceType;
+    @Column(name = "representative_price")
+    private Long representativePrice;
+    @Column(name = "amenity_updated_at")
+    private java.time.LocalDateTime amenityUpdatedAt;
+
+    // location is a DB-generated, indexed POINT. x/y remain the API/write contract.
     // 주소 정보 - 기존 DB 컬럼명(한글) 유지
     @Column(name = "시도명")
     private String province;

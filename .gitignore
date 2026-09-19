@@ -10,3 +10,7 @@ __pycache__/
 *.pyc
 .idea/
 *.debris*.bak/
+
+.env.*
+!.env.example
+**/application-local.properties
