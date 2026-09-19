@@ -141,6 +141,11 @@ Main의 MySQL 통합 테스트는 `SPATIAL_TEST_URL`이 있을 때만 실행됩�
 [격리된 MySQL 테스트 실행법](docs/spatial.md#테스트)을 제공합니다.
 Auth에는 현재 테스트 소스가 없으며 `test`는 NO-SOURCE입니다.
 
+## 전월세 실거래 데이터
+
+아파트·오피스텔·연립다세대 전월세 API 적재는 [전월세 적재 안내](docs/rental-import.md)를 참고하세요.
+유형별 원본 테이블과 `rental_trade` 통합 뷰를 사용하며 기존 건물/실제 매물 데이터는 변경하지 않습니다.
+
 ## 비밀정보 관리
 
 현재 Auth의 SMTP 설정은 `MAIL_USERNAME`/`MAIL_PASSWORD` 환경변수를 참조합니다.

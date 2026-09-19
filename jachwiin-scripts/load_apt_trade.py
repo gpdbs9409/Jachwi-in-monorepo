@@ -3,6 +3,7 @@
 사용법: python load_apt_trade.py --region 11680 --start 202301 --end 202312
 """
 
+import os
 import requests
 import xml.etree.ElementTree as ET
 import pymysql
@@ -11,7 +12,7 @@ import time
 from urllib.parse import unquote
 
 # ── 설정 ──────────────────────────────────────────────
-API_KEY = "3Xdz/TMzmv2qHUg/0Juza4kYGjLq+G22IJDHSP6aPSzWKi4sBGEhmPGLcFoUSRTg9mP1/O0kzofPlE5uSqFHuA=="
+API_KEY = os.environ.get("MOLIT_API_KEY", "")
 API_URL = "https://apis.data.go.kr/1613000/RTMSDataSvcAptTrade/getRTMSDataSvcAptTrade"
 
 DB_CONFIG = {
@@ -163,6 +164,8 @@ def main():
     parser.add_argument("--start",  default="202401", help="시작 년월 (YYYYMM)")
     parser.add_argument("--end",    default="202412", help="종료 년월 (YYYYMM)")
     args = parser.parse_args()
+    if not API_KEY:
+        parser.error("MOLIT_API_KEY 환경변수가 필요합니다")
 
     regions = SEOUL_REGIONS if args.region == "all" else {args.region: args.region}
     months  = ym_range(args.start, args.end)
@@ -179,7 +182,7 @@ def main():
                 grand_total += cnt
                 time.sleep(0.5)
             except Exception as e:
-                print(f"  ⚠️  {region_name} {ym} 실패: {e}")
+                print(f"  ⚠️  {region_name} {ym} 실패: {type(e).__name__}")
 
     conn.close()
     print(f"\n✅ 완료! 총 {grand_total}건 적재")
