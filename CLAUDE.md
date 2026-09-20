@@ -63,13 +63,6 @@ comments    -- 댓글 + 대댓글 (parent_id 자기참조)
 bookmarks   -- 관심 건물 (user_id + building_id 복합 유니크)
 ```
 
-- 스키마 DDL: `Jachwi_in-Server-Spring/src/main/resources/schema.sql`
-- 공간 설계/마이그레이션: `docs/spatial.md`; ERD: `docs/erd.md`
-- building_type과 건물 가격 요약 필드 추가; 기존 가격은 NULL, 유형은 ETC.
-- location은 x/y에서 DB가 계산하므로 직접 쓰지 않음. 기존 DB는 수동 마이그레이션 필요.
-- 추천 API는 아직 건물 중심. 매물 기반 추천/가격 요약/POI 집계 자동화는 미구현.
-- 더미 데이터: `Jachwi_in-Server-Spring/src/main/resources/dummy_data.sql`
-
 ---
 
 ## 인프라 (로컬/운영 공통)
@@ -150,25 +143,6 @@ React 웹 앱을 포함해 모든 레포가 `main` 단일 브랜치 사용 중.
 
 ---
 
-## 미완성 / 다음에 할 것
-
-- [x] Main Server Dockerfile 생성 완료 (`Jachwi_in-Server-Spring/Dockerfile`)
-- [ ] Railway 배포: Auth Server / Main Server / FastAPI 각각 서비스로 배포, MySQL·Redis는
-      Railway 매니지드 DB로 대체, Qdrant는 공식 도커 이미지로 배포
-      (계정 사용량이 Pro 플랜 $20 포함 크레딧을 넘길 수 있어 Set limits로 예산 방어선 필요)
-- [ ] Vercel 배포: `Jachwi_in-Web-React` 를 Vite 프로젝트로 그대로 임포트. 배포 도메인을
-      `CORS_ALLOWED_ORIGINS`에 추가해야 함
-- [ ] 네이버클라우드플랫폼에서 Web Dynamic Map용 Client ID 신규 발급 (모바일 SDK용과 별개)
-      → `Jachwi_in-Web-React/.env.local`의 `VITE_NAVER_MAP_CLIENT_ID`
-- [ ] GitHub Actions CI/CD 파이프라인 미작성
-- [x] FastAPI ↔ Main Server 연동 개선 (2026-09): 뷰포트 range filter 추가, point id를 building.id로 고정, 임베딩 모델 서버 기동 시 워밍업.
-      **단, Qdrant는 여전히 비어있을 수 있음 — 위 ingest 명령을 한 번 실행해야 벡터검색이 실제로 동작함.**
-      실행 전까지는 항상 DB 폴백(휴리스틱 점수 정렬)으로 동작 (동작 자체는 정상, 품질만 낮음)
-- [ ] k8s yaml 파일들이 Kafka 기준으로 되어있음 (업데이트 필요 또는 삭제)
-- [x] 현재 Auth SMTP 설정은 MAIL_USERNAME/MAIL_PASSWORD 환경변수 참조; 로컬 비밀 설정 Git 제외.
-- [ ] 과거 노출된 Gmail 앱 비밀번호는 계정 소유자가 폐기/재발급해야 함.
-      현재 파일 수정만으로 과거 비밀이 무효화되지 않음. Git 이력 재작성은 별도 협의 작업.
-
 ---
 
 ## /map 페이지 AI 채팅 추천 (2026-09 추가)
@@ -204,33 +178,6 @@ UI: `.map-canvas` 우하단에 떠 있는 챗봇 패널(`MapChatPanel`). 접었�
 기존 `recommendRooms()`(수동 폼)도 같은 버그를 하나 갖고 있었음: `budget`을 DTO로 받아놓고
 실제 Claude 프롬프트에는 전달하지 않아 예산이 조용히 무시되고 있었음 — 이번에 같이 고침.
 
-### 추천 품질/성능에 대한 판단 (요청하신 부분)
-
-**가장 큰 문제는 "성능"이 아니라 "Qdrant가 비어있었다"는 것**이었음. `scripts/ingest.py`가
-존재하긴 했지만 한 번도 실행된 적이 없어서, `FastApiClient.searchBuildings()`가 항상 빈 리스트를
-받아 매번 DB 폴백으로 새고 있었음 (기존 코드 기준 사실상 벡터 검색 기능이 켜진 적이 없었음).
-→ 아래 "Qdrant 적재" 명령을 한 번 실행해야 실제로 벡터 검색이 동작 시작함.
-
-두 번째 문제는 설계 자체의 정확도 문제였음: 임베딩 텍스트(`building_to_text`)에는 좌표가 아니라
-행정동 주소 문자열만 들어가기 때문에, "한양대 근처" 같은 위치 조건을 임베딩 유사도만으로 걸러낼
-방법이 없었음(주소 텍스트가 우연히 겹치지 않는 한). 그래서 **위치는 Qdrant range filter로 정확히
-강제하고, 임베딩 유사도는 그 안에서 "조용한/가성비/안전한" 같은 정성적 조건에만 쓰도록** 역할을
-분리함 (`vector_store.py`의 `_build_geo_filter`, x/y payload index 추가). 이게 이번 변경의 핵심.
-
-세 번째로 콜드스타트 지연: `sentence-transformers` 모델이 최초 요청 시점에 지연 로딩되고 있어서,
-서버 기동 직후 첫 채팅 요청이 모델 로딩(수 초~수십 초)을 기다리다 Spring의 RestTemplate
-readTimeout(10초)에 걸려 DB 폴백으로 새는 경우가 있었음 → FastAPI `lifespan`에서 서버 기동 시점에
-모델을 미리 로드하도록 워밍업 추가.
-
-성능(지연시간) 자체는 이 데이터 규모(더미 20건, 실 데이터도 서울 몇 개 대학가 수준)에서는
-Qdrant HNSW 기본 설정으로 충분함 — 별도 인덱스 튜닝은 불필요. `LlmService`에 각 단계
-(FastAPI 벡터검색, Claude 호출)마다 소요시간을 `log.info("[LLM][perf] ...")`로 남기도록 해뒀으니,
-실제 배포 후 느리다고 느껴지면 로그에서 어느 단계가 병목인지 바로 확인 가능.
-
-품질을 계속 검증하려면: (1) 몇 가지 대표 질의("한양대 근처 조용한 곳", "편의점 많고 저렴한 곳" 등)로
-`buildings[]`가 실제로 뷰포트 안에 있는지(위치 정확도는 filter가 보장하므로 100%여야 함),
-(2) `usedVectorSearch` 필드로 이번 응답이 벡터검색/DB폴백 중 뭘 썼는지 확인,
-(3) Redis에 `llm:chat:*` 캐시가 쌓이는지 확인하는 정도로 캡스톤 데모 수준의 검증은 충분함.
 
 ### 실행 순서 (로컬)
 ```bash
