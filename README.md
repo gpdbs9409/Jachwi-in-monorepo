@@ -1,3 +1,4 @@
+
 # 자취인 · Jachwi-in
 
 자취생을 위한 지도 기반 건물 탐색, AI 추천, 커뮤니티 서비스입니다.
@@ -33,7 +34,7 @@ flowchart LR
 Auth가 사용자를 관리하고, Main은 사용자 정보를 Auth 내부 API로 조회합니다.
 JWT 서명 키는 두 서버에서 동일해야 합니다. Redis는 이메일 인증 코드와 LLM 응답 캐시에 사용합니다.
 DB 구조는 [ERD](docs/erd.md), 공간 설계·업그레이드는 [공간 데이터 문서](docs/spatial.md)를 참고하세요.
-
+<img width="7062" height="2204" alt="mermaid-diagram (1)" src="https://github.com/user-attachments/assets/05f7523b-2126-4b19-89c4-1b2a0c0c92f3" />
 ## 로컬 실행
 
 필수: Docker Compose v2, 프론트엔드용 Node.js 22.12 이상. JVM을 직접 실행할 때는 Java 17을 사용하세요.
