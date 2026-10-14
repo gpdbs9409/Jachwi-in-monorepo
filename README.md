@@ -2,7 +2,9 @@
 # 자취인 · Jachwi-in
 
 자취생을 위한 지도 기반 건물 탐색, AI 추천, 커뮤니티 서비스입니다.
-React · Spring Boot · FastAPI를 모노레포로 관리하며, 원래 서비스별 Git 이력은 보존합니다.
+<img width="718" height="672" alt="image" src="https://github.com/user-attachments/assets/9ef7a387-67b0-42a5-aed8-9d1ef9f55738" />
+
+React · Spring Boot · FastAPI를 모노레포로 관리합니다. 
 
 ## 구성과 아키텍처
 
@@ -13,7 +15,6 @@ React · Spring Boot · FastAPI를 모노레포로 관리하며, 원래 서비�
 | `Jachwi_in-Server-Spring` | Spring Boot 3.1 / Java 17, 지도·게시글·추천 | 8080 |
 | `Jachwi_in-FastAPI` | 문장 임베딩, Qdrant 검색·적재 | 8000 |
 | `jachwiin-scripts` | 공공 실거래 데이터 적재 등 운영 스크립트 | — |
-| `Jachwi_in-Embedding-Benchmark` | 별도 벤치마크 프로젝트; 앱 실행과 무관 | — |
 
 ```mermaid
 flowchart LR
